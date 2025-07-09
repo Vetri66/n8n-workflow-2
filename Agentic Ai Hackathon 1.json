@@ -1,0 +1,250 @@
+{
+  "name": "Agentic Ai Hackathon 1",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Theraphy  message form",
+        "formDescription": "Please enter your message in your native language ",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "placeholder": "enter your name"
+            },
+            {
+              "fieldLabel": "Language ",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "tamil"
+                  },
+                  {
+                    "option": "malayalam"
+                  },
+                  {
+                    "option": "hindi"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Message ",
+              "placeholder": "Enetr the Message "
+            },
+            {
+              "fieldLabel": "translate language ",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "english"
+                  },
+                  {
+                    "option": "Hindi "
+                  },
+                  {
+                    "option": "german"
+                  },
+                  {}
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9253e5e1-8134-44fc-8b92-8daa56268f4e",
+      "name": "On form submission",
+      "webhookId": "e378d555-058b-42b2-bd03-fdea5a876357"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI language assistant helping a therapist understand multilingual messages from patients.\n\nTranslate the following message from {{ $json['Language '] }} to{{ $json['translate language '] }} . Then, briefly explain the emotional tone or mental health context of the message to assist the therapist.\nthat translated message no need to bold\n\nMessage:\n{{ $json['Message '] }}\n\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "288a0ce1-44e2-42c2-8d12-29853ef54dda",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        240,
+        220
+      ],
+      "id": "3890b093-829f-42e7-89f4-482c0fbfbfd5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cEkS2BkiF3jcCBjM",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15289ac7-5d18-48b9-a12a-6fa2d51d0b67",
+              "name": "Name",
+              "value": "={{ $('On form submission').item.json.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "049d47ee-79a3-4b6b-81a7-099e212cf286",
+              "name": "orginal message ",
+              "value": "={{ $('On form submission').item.json['Message '] }}",
+              "type": "string"
+            },
+            {
+              "id": "120da803-c073-461b-90f2-b30a3833ac64",
+              "name": "language ",
+              "value": "={{ $('On form submission').item.json['Language '] }}",
+              "type": "string"
+            },
+            {
+              "id": "1de659f4-7b79-4117-817a-5161da460e96",
+              "name": "translated message ",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        580,
+        0
+      ],
+      "id": "31d18013-d817-4dcb-b7bc-d3b4bf050f7c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Get all the input data\nconst items = $input.all();\n\n// Step 2: Map through each item to format the email\nconst formattedEmails = items.map((item) => {\n  // Step 3: Extract the necessary fields from each item\n  const name = item?.json?.Name;\n  const originalMessage = item?.json?.[\"orginal message \"];\n  const language = item?.json?.[\"language \"];\n  const translatedMessage = item?.json?.[\"translated message \"];\n\n  // Step 4: Format the email content\n  const emailContent = `Dear ${name},\n\nWe have received your message in ${language}:\n\"${originalMessage}\"\n\nHere is the translated message:\n\"${translatedMessage}\"\n\nBest regards,\nYour Therapist`;\n\n  // Step 5: Return the formatted email content\n  return { emailContent };\n});\n\n// Step 6: Return the formatted emails\nreturn formattedEmails;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "03a326ef-ef6c-4074-8d61-7eadb2333e73",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sendTo": "vetriselvan.m.it.2023@snsct.org",
+        "subject": "translate to therapist",
+        "emailType": "text",
+        "message": "={{ $json.emailContent }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        980,
+        0
+      ],
+      "id": "5656cafb-e5dd-420f-b7a9-411c902f31eb",
+      "name": "Send a message",
+      "webhookId": "99bb1806-259a-48c1-a8cd-c5715df17236",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "w488uEv5SamZNYSc",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b65fcc78-37dc-4126-bb3a-18733da0a375",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3a938f96baf88740c6285b6782d84aa47337fe7a6dba6619bdd683e7fe42e3af"
+  },
+  "id": "U5OCxeut0Tv1mhqq",
+  "tags": []
+}
